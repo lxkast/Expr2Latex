@@ -20,6 +20,7 @@ class Parser:
             self.currentPosition += 1
             newNode = self.Parser()
             if self.GetCurrentCharacter() == ")":
+                self.currentPosition += 1
                 return newNode
             else:    
                 raise Exception("Missing closing bracket")
@@ -71,6 +72,28 @@ class Parser:
     def Parser(self):
         return self.additive()
 
-coolParser = Parser("(1+2)")
-coolParser.Parser()
-print("gdilsfhuudf")
+
+class NodePrinter:
+    def printNode(self,node):
+        print(node.val)
+        self.printNodeWithIndentation(node, 0)
+
+
+    def printNodeWithIndentation(self,node, indentation):
+        if node.leftPtr or node.rightPtr:
+            print(self.getIndentation(indentation) + "|")
+        if (node.leftPtr):
+            print(self.getIndentation(indentation) + "-> " + str(node.leftPtr.val))
+            self.printNodeWithIndentation(node.leftPtr, indentation + 3)
+		
+        if (node.rightPtr):
+            print(self.getIndentation(indentation) + "-> " + str(node.rightPtr.val))
+            self.printNodeWithIndentation(node.rightPtr, indentation + 3)
+
+    def getIndentation(self,n):
+        return " " * n	
+   
+
+coolParser = Parser("(1+2)/3")
+printer = NodePrinter()
+printer.printNode(coolParser.Parser())
