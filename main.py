@@ -17,7 +17,83 @@ class Lexer:
     def __init__(self,string):
         self.string = string
         self.currentPosition = 0
+        self.list = []
         self.temporaryPosition = 0
+        self.currentChar = ""
+        self.Iterate()
+
+    def Iterate(self):
+        for i in range(0,len(self.string)):
+            if self.currentPosition >= len(self.string):
+                break
+            self.currentChar = self.string[self.currentPosition].lower()
+            if self.currentChar == "+":
+                self.AddToken("+")
+            elif self.currentChar == "*":
+                self.AddToken("*")
+            elif self.currentChar == "-":
+                self.AddToken("-")
+            elif self.currentChar == "/":
+                self.AddToken("/")
+            elif self.currentChar == "^":
+                self.AddToken("^")
+            elif self.currentChar == "(":
+                self.AddToken("(")
+            elif self.currentChar == ")":
+                self.AddToken(")")
+            elif self.currentChar == "p":
+                self.HandleP()
+            elif self.currentChar == "c":
+                self.HandleC()
+            elif self.currentChar == "s":
+                self.HandleS()
+            elif self.currentChar == "t":
+                self.HandleT()
+            else:
+                self.HandleElse()
+            self.currentPosition += 1
+            
+
+    def AddToken(self,token):
+        self.list.append(token)
+
+    def PeekAhead(self,count):
+        if self.currentPosition + count <= len(self.string):
+            return self.string[self.currentPosition + count]
+        else:
+            return chr(0) 
+
+    def HandleP(self):
+        if self.PeekAhead(1) == "i":
+            self.AddToken("pi")
+            self.currentPosition += 1
+        if self.PeekAhead(1) == "s" and self.PeekAhead(2) == "i":
+            self.AddToken("psi")
+            self.currentPosition += 2
+    
+    def HandleC(self):
+        if self.PeekAhead(1) == "o" and self.PeekAhead(2) == "s":
+            self.AddToken("cos")
+            self.currentPosition += 2
+
+    def HandleS(self):
+        if self.PeekAhead(1) == "i" and self.PeekAhead(2) == "n":
+            self.AddToken("sin")
+            self.currentPosition += 2
+    
+    def HandleT(self):
+        if self.PeekAhead(1) == "a" and self.PeekAhead(2) == "n":
+            self.AddToken("tan")
+            self.currentPosition += 2
+
+    def HandleElse(self):
+        outputToken = self.currentChar
+        i = 1
+        while ord(self.PeekAhead(i).lower()) <= 57 and ord(self.PeekAhead(i).lower()) >= 48:
+            outputToken = outputToken + self.PeekAhead(i)
+            i += 1
+        self.AddToken(outputToken)
+        self.currentPosition += i - 1
 
 class Parser:
     def __init__(self, string):
@@ -146,7 +222,7 @@ class NodePrinter:
     def getIndentation(self,n):
         return "|  " * n	
    
-
+lexer = Lexer("131094+tan(x)")
 coolParser = Parser("1-x(-y)")
 printer = NodePrinter()
 printer.printNode(coolParser.Parser())
