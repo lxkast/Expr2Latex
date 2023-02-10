@@ -1,3 +1,11 @@
+#expression     → additive
+#additive       → division (("+" | "-") division)*
+#division       → term ( "/" term)*
+#term           → unary unary* | unary " * " unary
+#term           → unary ("*"? unary)*
+#unary          → NUMBER | VARIABLE | "(" expression ")"
+
+
 class Node:
     def __init__(self, val, leftPtr, rightPtr):
         self.val = val
@@ -16,6 +24,7 @@ class Parser:
             return self.string[self.currentPosition]
 
     def unary(self):
+        
         if self.GetCurrentCharacter() == "(":
             self.currentPosition += 1
             newNode = self.Parser()
@@ -25,7 +34,7 @@ class Parser:
             else:    
                 raise Exception("Missing closing bracket")
         currentNumber = ""
-        while self.GetCurrentCharacter() in ["1","2","3",
+        while self.GetCurrentCharacter() in ["1","2","3", ### put this loop at the top because need to constantly check if new term has ()
                 "4","5","6",
                 "7","8","9",
                 "0"]:
@@ -44,9 +53,20 @@ class Parser:
             "4","5","6",
             "7","8","9",
             "0","(","*"]:
-            self.currentPosition += 1
-            nextUnary = self.unary()
-            currentTree = Node("*",currentTree,nextUnary)
+            if self.GetCurrentCharacter() in ["1","2","3",
+            "4","5","6",
+            "7","8","9",
+            "0","("]:
+
+
+                nextUnary = self.unary()
+                self.currentPosition += 1
+                currentTree = Node("*",currentTree,nextUnary)
+            else:
+                self.currentPosition += 1
+                nextUnary = self.unary()
+                currentTree = Node("*",currentTree,nextUnary)
+            
         
         return currentTree
                 
@@ -84,16 +104,17 @@ class NodePrinter:
             print(self.getIndentation(indentation) + "|")
         if (node.leftPtr):
             print(self.getIndentation(indentation) + "-> " + str(node.leftPtr.val))
-            self.printNodeWithIndentation(node.leftPtr, indentation + 3)
+            self.printNodeWithIndentation(node.leftPtr, indentation + 1)
 		
         if (node.rightPtr):
             print(self.getIndentation(indentation) + "-> " + str(node.rightPtr.val))
-            self.printNodeWithIndentation(node.rightPtr, indentation + 3)
+            self.printNodeWithIndentation(node.rightPtr, indentation + 1)
+        self.getIndentation(1)
 
     def getIndentation(self,n):
-        return " " * n	
+        return "|  " * n	
    
 
-coolParser = Parser("(1+2)/3")
+coolParser = Parser("3((1+2)/3)")
 printer = NodePrinter()
 printer.printNode(coolParser.Parser())
