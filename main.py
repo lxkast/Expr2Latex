@@ -1,8 +1,8 @@
 #expression     → additive
 #additive       → division (("+" | "-") division)*
-#division       → term ( "/" term)*
-#term           → unary unary* | unary " * " unary
-#term           → unary ("*"? unary)*
+#division       → term ("/" term)*
+#term           → index ("*"? index)*
+#index          → unary ("^" unary)*
 #unary          → NUMBER | VARIABLE | "(" expression ")"
 
 
@@ -19,7 +19,7 @@ class Parser:
 
     def GetCurrentCharacter(self):
         if self.currentPosition >= len(self.string):
-            return None
+            return chr(0)
         else:
             return self.string[self.currentPosition]
 
@@ -34,37 +34,51 @@ class Parser:
             else:    
                 raise Exception("Missing closing bracket")
         currentNumber = ""
-        while self.GetCurrentCharacter() in ["1","2","3", ### put this loop at the top because need to constantly check if new term has ()
+        if self.GetCurrentCharacter() in ["1","2","3",
                 "4","5","6",
                 "7","8","9",
                 "0"]:
-            currentNumber += self.string[self.currentPosition]
+            while self.GetCurrentCharacter() in ["1","2","3",
+                "4","5","6",
+                "7","8","9",
+                "0"]:
+                currentNumber += self.string[self.currentPosition]
+                self.currentPosition += 1
+        elif self.GetCurrentCharacter().lower() in list(map(chr, range(97, 123))):
+            currentNumber += self.GetCurrentCharacter()
             self.currentPosition += 1
-        number = int(currentNumber)
-        return Node(number,None,None)
+            
+        
+        #number = int(currentNumber)
+        return Node(currentNumber,None,None)
 
+    def index(self):
+        currentTree = self.unary()
+        while self.GetCurrentCharacter() == "^":
+            self.currentPosition += 1
+            nextTerm = self.unary()
+            currentTree = Node("^",currentTree,nextTerm)
 
+        return currentTree
 
 
     def term(self):
-        currentTree = self.unary()
+        currentTree = self.index()
 
         while self.GetCurrentCharacter() in ["1","2","3",
             "4","5","6",
             "7","8","9",
-            "0","(","*"]:
+            "0","(","*"] or self.GetCurrentCharacter().lower() in list(map(chr, range(97, 123))):
             if self.GetCurrentCharacter() in ["1","2","3",
             "4","5","6",
             "7","8","9",
-            "0","("]:
-
-
-                nextUnary = self.unary()
+            "0","("] or self.GetCurrentCharacter().lower() in list(map(chr, range(97, 123))):
+                nextUnary = self.index()
                 self.currentPosition += 1
                 currentTree = Node("*",currentTree,nextUnary)
             else:
                 self.currentPosition += 1
-                nextUnary = self.unary()
+                nextUnary = self.index()
                 currentTree = Node("*",currentTree,nextUnary)
             
         
@@ -115,6 +129,6 @@ class NodePrinter:
         return "|  " * n	
    
 
-coolParser = Parser("3((1+2)/3)")
+coolParser = Parser("2^(x^2)x")
 printer = NodePrinter()
 printer.printNode(coolParser.Parser())
