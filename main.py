@@ -3,14 +3,21 @@
 #division       → term ("/" term)*
 #term           → index ("*"? index)*
 #index          → unary ("^" unary)*
+#negate         → "-"* unary
 #unary          → NUMBER | VARIABLE | "(" expression ")"
-
 
 class Node:
     def __init__(self, val, leftPtr, rightPtr):
         self.val = val
         self.leftPtr = leftPtr
         self.rightPtr = rightPtr
+
+class Lexer:
+    ["x" , "(" , "1231" , "+" , "pi" , ")"]
+    def __init__(self,string):
+        self.string = string
+        self.currentPosition = 0
+        self.temporaryPosition = 0
 
 class Parser:
     def __init__(self, string):
@@ -52,11 +59,22 @@ class Parser:
         #number = int(currentNumber)
         return Node(currentNumber,None,None)
 
-    def index(self):
+    def negate(self):
+        negateCount = 0
+        tempPosition = self.currentPosition
+        while self.GetCurrentCharacter() == "-":
+            negateCount += 1
+            self.currentPosition += 1
         currentTree = self.unary()
+        if negateCount % 2 == 1:
+            currentTree = Node("*",Node(-1,None,None),currentTree)
+        return currentTree
+
+    def index(self):
+        currentTree = self.negate()
         while self.GetCurrentCharacter() == "^":
             self.currentPosition += 1
-            nextTerm = self.unary()
+            nextTerm = self.negate()
             currentTree = Node("^",currentTree,nextTerm)
 
         return currentTree
@@ -129,6 +147,6 @@ class NodePrinter:
         return "|  " * n	
    
 
-coolParser = Parser("2^(x^2)x")
+coolParser = Parser("1-x(-y)")
 printer = NodePrinter()
 printer.printNode(coolParser.Parser())
