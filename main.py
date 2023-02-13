@@ -162,7 +162,7 @@ class Parser:
             self.currentPosition += 1
         currentTree = self.unary()
         if negateCount % 2 == 1:
-            currentTree = Node(Token("term","*"),Node(-1,None,None),currentTree)
+            currentTree = Node(Token("term","*"),Node(Token("unary","-1"),None,None),currentTree)
         return currentTree
 
     def index(self):
@@ -237,9 +237,20 @@ class NodePrinter:
     def getIndentation(self,n):
         return "|  " * n	
    
-lexer = Lexer("120(x^2-1)")
+lexer = Lexer("2s(1+4)")
+# *
+# |
+# -> *
+# |  |
+# |  -> *
+# |  |  |
+# |  |  -> 2
+# |  |  -> s
+# |  -> 1
+# -> 4
+
 coolParser = Parser(lexer.list)
 printer = NodePrinter()
 printer.printNode(coolParser.Parser())
 
-#fix negate tomorrow
+#fix term tomorrow
