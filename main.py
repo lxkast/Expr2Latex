@@ -181,7 +181,7 @@ class Parser:
         while self.GetCurrentCharacter().type == "unary" or self.GetCurrentCharacter().type == "term":
             if (self.GetCurrentCharacter().type == "unary" and self.GetCurrentCharacter().val != ")") or self.GetCurrentCharacter().val == "(":
                 nextUnary = self.index()
-                self.currentPosition += 1
+#                self.currentPosition += 1
                 currentTree = Node(Token("term","*"),currentTree,nextUnary)
             elif self.GetCurrentCharacter().val == "*":
                 self.currentPosition += 1
@@ -237,7 +237,7 @@ class NodePrinter:
     def getIndentation(self,n):
         return "|  " * n	
    
-lexer = Lexer("2(1+4)")
+lexer = Lexer("1234567(a+b)")
 # *
 # |
 # -> *
@@ -252,5 +252,3 @@ lexer = Lexer("2(1+4)")
 coolParser = Parser(lexer.list)
 printer = NodePrinter()
 printer.printNode(coolParser.Parser())
-
-#fix term tomorrow
