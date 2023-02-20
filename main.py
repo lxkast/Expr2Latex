@@ -237,7 +237,7 @@ class NodePrinter:
     def getIndentation(self,n):
         return "|  " * n	
    
-lexer = Lexer("2s(1+4)")
+lexer = Lexer("2(1+4)")
 # *
 # |
 # -> *
