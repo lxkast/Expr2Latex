@@ -154,13 +154,23 @@ class Parser:
         #number = int(currentNumber)
         return Node(Token("unary",currentNumber),None,None)
 
+    def  trig(self):
+        if self.GetCurrentCharacter().type == "trig":
+            val = self.GetCurrentCharacter().val
+            self.currentPosition += 1
+            expression = self.Parser()
+            currentTree = Node(Token("trig",val),expression,None)
+        else:
+            currentTree = self.unary()
+        return currentTree
+
     def negate(self):
         negateCount = 0
         tempPosition = self.currentPosition
         while self.GetCurrentCharacter().val == "-":
             negateCount += 1
             self.currentPosition += 1
-        currentTree = self.unary()
+        currentTree = self.trig()
         if negateCount % 2 == 1:
             currentTree = Node(Token("term","*"),Node(Token("unary","-1"),None,None),currentTree)
         return currentTree
@@ -178,19 +188,19 @@ class Parser:
     def term(self):
         currentTree = self.index()
 
-        while self.GetCurrentCharacter().type == "unary" or self.GetCurrentCharacter().type == "term":
+        while self.GetCurrentCharacter().type == "unary" or self.GetCurrentCharacter().type == "term" or self.GetCurrentCharacter().type == "trig":
             if (self.GetCurrentCharacter().type == "unary" and self.GetCurrentCharacter().val != ")") or self.GetCurrentCharacter().val == "(":
                 nextUnary = self.index()
-#                self.currentPosition += 1
                 currentTree = Node(Token("term","*"),currentTree,nextUnary)
             elif self.GetCurrentCharacter().val == "*":
                 self.currentPosition += 1
                 nextUnary = self.index()
                 currentTree = Node(Token("term","*"),currentTree,nextUnary)
+            elif self.GetCurrentCharacter().type == "trig":
+                nextUnary = self.index()
+                currentTree = Node(Token("term","*"),currentTree,nextUnary)
             else:
                 break
-            
-        
         return currentTree
                 
 
@@ -237,7 +247,7 @@ class NodePrinter:
     def getIndentation(self,n):
         return "|  " * n	
    
-lexer = Lexer("1234567(a+b)")
+lexer = Lexer("5sin(x^2y)")
 # *
 # |
 # -> *
