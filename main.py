@@ -21,7 +21,6 @@ class Token:
         return self.val
 
 class Lexer:
-    ["x" , "(" , "1231" , "+" , "pi" , ")"]
     def __init__(self,string):
         self.string = string
         self.currentPosition = 0
@@ -57,6 +56,8 @@ class Lexer:
                 self.HandleS()
             elif self.currentChar == "t":
                 self.HandleT()
+            elif self.currentChar == "r":
+                self.HandleR()
             else:
                 self.HandleElse()
             self.currentPosition += 1
@@ -83,24 +84,37 @@ class Lexer:
     
     def HandleC(self):
         if self.PeekAhead(1) == "o" and self.PeekAhead(2) == "s":
-            self.list.append(Token("trig","cos"))
+            self.list.append(Token("func","cos"))
             self.currentPosition += 2
         else:
             self.list.append(Token("unary","c"))
 
     def HandleS(self):
-        if self.PeekAhead(1) == "i" and self.PeekAhead(2) == "n":
-            self.list.append(Token("trig","sin"))
+        if self.PeekAhead(1) == "i" and self.PeekAhead(2) == "n" and self.PeekAhead(3) == "h":
+            self.list.append(Token("func","sinh"))
+            self.currentPosition += 3
+        elif self.PeekAhead(1) == "i" and self.PeekAhead(2) == "n":
+            self.list.append(Token("func","sin"))
             self.currentPosition += 2
+        elif self.PeekAhead(1) == "q" and self.PeekAhead(2) == "r" and self.PeekAhead(3) == "t":
+            self.list.append(Token("func","sqrt"))
+            self.currentPosition += 3
         else:
             self.list.append(Token("unary","s"))
     
     def HandleT(self):
         if self.PeekAhead(1) == "a" and self.PeekAhead(2) == "n":
-            self.list.append(Token("trig","tan"))
+            self.list.append(Token("func","tan"))
             self.currentPosition += 2
         else:
             self.list.append(Token("unary","t"))
+
+    def HandleR(self):
+        if self.PeekAhead(1) == "o" and self.PeekAhead(2) == "o" and self.PeekAhead(3) == "t":
+            self.list.append(Token("func","sqrt"))
+            self.currentPosition += 3
+        else:
+            self.list.append(Token("unary","r"))  
 
     def HandleElse(self):
         outputToken = self.currentChar
@@ -135,8 +149,10 @@ class Parser:
                 raise Exception("Missing closing bracket")
         currentNumber = ""
         if self.GetCurrentCharacter().type == "unary":
-            currentNumber += str(self.GetCurrentCharacter().val)
+            currentNumber = str(self.GetCurrentCharacter().val)
             self.currentPosition += 1
+        if currentNumber == "":
+            raise Exception("Syntax error")
         # if self.GetCurrentCharacter() in ["1","2","3",
         #         "4","5","6",
         #         "7","8","9",
@@ -155,13 +171,18 @@ class Parser:
         #number = int(currentNumber)
         return Node(Token("unary",currentNumber),None,None)
 
-    def  trig(self):
-        if self.GetCurrentCharacter().type == "trig":
-            val = self.GetCurrentCharacter().val
-            self.currentPosition += 2
-            expression = self.Parser()
+    def  func(self):
+        if self.GetCurrentCharacter().type == "func":
+            function = self.GetCurrentCharacter().val
             self.currentPosition += 1
-            currentTree = Node(Token("trig",val),expression,None)
+            if self.GetCurrentCharacter().val == "(":
+                self.currentPosition += 1
+                expression = self.Parser()
+                self.currentPosition += 1
+                currentTree = Node(Token("func",function),expression,None)
+            else:
+                unary = self.unary()
+                currentTree = Node(Token("func",function),unary,None)
         else:
             currentTree = self.unary()
         return currentTree
@@ -172,7 +193,7 @@ class Parser:
         while self.GetCurrentCharacter().val == "-":
             negateCount += 1
             self.currentPosition += 1
-        currentTree = self.trig()
+        currentTree = self.func()
         if negateCount % 2 == 1:
             currentTree = Node(Token("term","*"),Node(Token("unary","-1"),None,None),currentTree)
         return currentTree
@@ -190,7 +211,7 @@ class Parser:
     def term(self):
         currentTree = self.index()
 
-        while self.GetCurrentCharacter().type == "unary" or self.GetCurrentCharacter().type == "term" or self.GetCurrentCharacter().type == "trig":
+        while self.GetCurrentCharacter().type == "unary" or self.GetCurrentCharacter().type == "term" or self.GetCurrentCharacter().type == "func":
             if (self.GetCurrentCharacter().type == "unary" and self.GetCurrentCharacter().val != ")") or self.GetCurrentCharacter().val == "(":
                 nextUnary = self.index()
                 currentTree = Node(Token("term","*"),currentTree,nextUnary)
@@ -198,7 +219,7 @@ class Parser:
                 self.currentPosition += 1
                 nextUnary = self.index()
                 currentTree = Node(Token("term","*"),currentTree,nextUnary)
-            elif self.GetCurrentCharacter().type == "trig":
+            elif self.GetCurrentCharacter().type == "func":
                 nextUnary = self.index()
                 currentTree = Node(Token("term","*"),currentTree,nextUnary)
             else:
@@ -249,7 +270,7 @@ class NodePrinter:
     def getIndentation(self,n):
         return "|  " * n	
    
-lexer = Lexer("sin(x)^2 + cos(x)^2")
+lexer = Lexer("")
 # *
 # |
 # -> *
