@@ -108,8 +108,9 @@ class Lexer:
         while ord(self.PeekAhead(i).lower()) <= 57 and ord(self.PeekAhead(i).lower()) >= 48:
             outputToken = str(outputToken) + str(self.PeekAhead(i))
             i += 1
-        self.list.append(Token("unary",outputToken))
-        self.currentPosition += i - 1
+        if outputToken != " ":
+            self.list.append(Token("unary",outputToken))
+            self.currentPosition += i - 1
 
 class Parser:
     def __init__(self, list):
@@ -157,8 +158,9 @@ class Parser:
     def  trig(self):
         if self.GetCurrentCharacter().type == "trig":
             val = self.GetCurrentCharacter().val
-            self.currentPosition += 1
+            self.currentPosition += 2
             expression = self.Parser()
+            self.currentPosition += 1
             currentTree = Node(Token("trig",val),expression,None)
         else:
             currentTree = self.unary()
@@ -247,7 +249,7 @@ class NodePrinter:
     def getIndentation(self,n):
         return "|  " * n	
    
-lexer = Lexer("5sin(x^2y)")
+lexer = Lexer("sin(x)^2 + cos(x)^2")
 # *
 # |
 # -> *
