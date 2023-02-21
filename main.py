@@ -175,7 +175,20 @@ class Parser:
         if self.GetCurrentCharacter().type == "func":
             function = self.GetCurrentCharacter().val
             self.currentPosition += 1
-            if self.GetCurrentCharacter().val == "(":
+            if self.GetCurrentCharacter().type == "index":
+                self.currentPosition += 1
+                index = self.unary()
+                if self.GetCurrentCharacter().val == "(":
+                    self.currentPosition += 1
+                    expression = self.Parser()
+                    self.currentPosition += 1
+                    currentTree = Node(Token("func",function),expression,None)
+                else:
+                    unary = self.unary()
+                    currentTree = Node(Token("func",function),unary,None)
+                currentTree = Node(Token("index","^"),currentTree,index)
+                
+            elif self.GetCurrentCharacter().val == "(":
                 self.currentPosition += 1
                 expression = self.Parser()
                 self.currentPosition += 1
@@ -270,7 +283,7 @@ class NodePrinter:
     def getIndentation(self,n):
         return "|  " * n	
    
-lexer = Lexer("")
+lexer = Lexer("sinh^(y+1)x")
 # *
 # |
 # -> *
