@@ -83,7 +83,10 @@ class Lexer:
             self.list.append(Token("unary","p"))
     
     def HandleC(self):
-        if self.PeekAhead(1) == "o" and self.PeekAhead(2) == "s":
+        if self.PeekAhead(1) == "o" and self.PeekAhead(2) == "s" and self.PeekAhead(3) == "h":
+            self.list.append(Token("func","cosh"))
+            self.currentPosition += 3
+        elif self.PeekAhead(1) == "o" and self.PeekAhead(2) == "s":
             self.list.append(Token("func","cos"))
             self.currentPosition += 2
         else:
@@ -103,7 +106,10 @@ class Lexer:
             self.list.append(Token("unary","s"))
     
     def HandleT(self):
-        if self.PeekAhead(1) == "a" and self.PeekAhead(2) == "n":
+        if self.PeekAhead(1) == "a" and self.PeekAhead(2) == "n" and self.PeekAhead(3) == "h":
+            self.list.append(Token("func","tanh"))
+            self.currentPosition += 3
+        elif self.PeekAhead(1) == "a" and self.PeekAhead(2) == "n":
             self.list.append(Token("func","tan"))
             self.currentPosition += 2
         else:
@@ -119,9 +125,16 @@ class Lexer:
     def HandleElse(self):
         outputToken = self.currentChar
         i = 1
+        decimalPlaces = 0
         while ord(self.PeekAhead(i).lower()) <= 57 and ord(self.PeekAhead(i).lower()) >= 48:
             outputToken = str(outputToken) + str(self.PeekAhead(i))
             i += 1
+        if self.PeekAhead(i) == ".":
+            i += 1
+            outputToken += "."
+            while ord(self.PeekAhead(i).lower()) <= 57 and ord(self.PeekAhead(i).lower()) >= 48:
+                outputToken = str(outputToken) + str(self.PeekAhead(i))
+                i += 1
         if outputToken != " ":
             self.list.append(Token("unary",outputToken))
             self.currentPosition += i - 1
@@ -144,6 +157,8 @@ class Parser:
             newNode = self.Parser()
             if self.GetCurrentCharacter().val == ")":
                 self.currentPosition += 1
+                return newNode
+            elif self.GetCurrentCharacter().type == "None":
                 return newNode
             else:    
                 raise Exception("Missing closing bracket")
@@ -171,7 +186,7 @@ class Parser:
         #number = int(currentNumber)
         return Node(Token("unary",currentNumber),None,None)
 
-    def  func(self):
+    def func(self):
         if self.GetCurrentCharacter().type == "func":
             function = self.GetCurrentCharacter().val
             self.currentPosition += 1
@@ -231,7 +246,7 @@ class Parser:
             elif self.GetCurrentCharacter().val == "*":
                 self.currentPosition += 1
                 nextUnary = self.index()
-                currentTree = Node(Token("term","*"),currentTree,nextUnary)
+                currentTree = Node(Token("term*","*"),currentTree,nextUnary)
             elif self.GetCurrentCharacter().type == "func":
                 nextUnary = self.index()
                 currentTree = Node(Token("term","*"),currentTree,nextUnary)
@@ -282,8 +297,11 @@ class NodePrinter:
 
     def getIndentation(self,n):
         return "|  " * n	
+
+#class LaTeXBuilder:
+
    
-lexer = Lexer("sinh^(y+1)x")
+lexer = Lexer("(1+0.3x)/5.3")
 # *
 # |
 # -> *
