@@ -4,6 +4,7 @@
 #term           → index ("*"? index)*
 #index          → unary ("^" unary)*
 #negate         → "-"* unary
+#func           → UNARY | ("sin", ("cos"), ...) ("^"unary)? ( ( "(" expression ")" ) | unary )
 #unary          → NUMBER | VARIABLE | "(" expression ")"
 
 class Node:
@@ -16,9 +17,6 @@ class Token:
     def __init__(self, type, val):
         self.type = type
         self.val = val
-    
-    def getVal(self):
-        return self.val
 
 class Lexer:
     def __init__(self,string):
@@ -298,21 +296,98 @@ class NodePrinter:
     def getIndentation(self,n):
         return "|  " * n	
 
-#class LaTeXBuilder:
+class LaTeXBuilder:
+    finalLatex = ""
+
+    def write(self,string):
+        self.finalLatex += string
+
+    def build(self,tree):
+        self.process(tree)
+        self.finalLatex = "$" + self.finalLatex + "$"
+        return self.finalLatex
+
+    def process(self,tree):
+        if tree.val.type == "unary":
+            self.write(tree.val.val)
+        elif tree.val.type == "additive":
+            self.process(tree.leftPtr)
+            self.write(tree.val.val)
+            self.process(tree.rightPtr)
+        elif tree.val.type == "division":
+            self.write("\\frac{")
+            self.process(tree.leftPtr)
+            self.write("}{")
+            self.process(tree.rightPtr)
+            self.write("}")
+        elif tree.val.type == "index":
+            if tree.leftPtr.val.type != "unary" and  tree.leftPtr.val.type != "func":
+                self.write("(")
+                self.process(tree.leftPtr)
+                self.write(")")
+            else:
+                self.process(tree.leftPtr)
+            self.write(tree.val.val)
+            if tree.rightPtr.val.type != "unary" and tree.rightPtr.val.type != "func":
+                self.write("{")
+                self.process(tree.rightPtr)
+                self.write("}")
+            else:
+                self.process(tree.rightPtr)
+        elif tree.val.type == "func":
+            if (tree.val.val == "sqrt"):
+                self.write(f"\\{tree.val.val}")
+                self.write("{")
+                self.process(tree.leftPtr)
+                self.write("}")
+            else:
+                self.write(f"\\{tree.val.val}")
+                self.write("(")
+                self.process(tree.leftPtr)
+                self.write(")")
+        elif tree.val.type == "term*":
+            if tree.leftPtr.val.type != "unary" and  tree.leftPtr.val.type != "func":
+                self.write("(")
+                self.process(tree.leftPtr)
+                self.write(")")
+            else:
+                self.process(tree.leftPtr)
+            self.write(tree.val.val)
+            if tree.rightPtr.val.type != "unary" and tree.rightPtr.val.type != "func":
+                self.write("(")
+                self.process(tree.rightPtr)
+                self.write(")")
+            else:
+                self.process(tree.rightPtr)
+        elif tree.val.type == "term":
+            if  ord(tree.leftPtr.val.val[0]) <= 57 and ord(tree.leftPtr.val.val[0]) >= 48 and ord(tree.rightPtr.val.val[0]) <= 57 and ord(tree.rightPtr.val.val[0]) >= 48:
+                self.process(tree.leftPtr)
+                self.write("(")
+                self.process(tree.rightPtr)
+                self.write(")")
+            else:
+
+                if tree.leftPtr.val.type != "unary" and  tree.leftPtr.val.type != "func":
+                    self.write("(")
+                    self.process(tree.leftPtr)
+                    self.write(")")
+                else:
+                    self.process(tree.leftPtr)
+                if tree.rightPtr.val.type != "unary" and tree.rightPtr.val.type != "func":
+                    self.write("(")
+                    self.process(tree.rightPtr)
+                    self.write(")")
+                else:
+                    self.process(tree.rightPtr)
+
+
+
 
    
-lexer = Lexer("(1+0.3x)/5.3")
-# *
-# |
-# -> *
-# |  |
-# |  -> *
-# |  |  |
-# |  |  -> 2
-# |  |  -> s
-# |  -> 1
-# -> 4
+lexer = Lexer("root(1+tan^2x)")
 
 coolParser = Parser(lexer.list)
 printer = NodePrinter()
-printer.printNode(coolParser.Parser())
+parsed = coolParser.Parser()
+printer.printNode(parsed)
+print(LaTeXBuilder().build(parsed))
