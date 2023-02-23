@@ -379,15 +379,3 @@ class LaTeXBuilder:
                     self.write(")")
                 else:
                     self.process(tree.rightPtr)
-
-
-
-
-   
-lexer = Lexer("root(1+tan^2x)")
-
-coolParser = Parser(lexer.list)
-printer = NodePrinter()
-parsed = coolParser.Parser()
-printer.printNode(parsed)
-print(LaTeXBuilder().build(parsed))
