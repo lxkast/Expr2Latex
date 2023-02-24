@@ -360,22 +360,28 @@ class LaTeXBuilder:
             else:
                 self.process(tree.rightPtr)
         elif tree.val.type == "term":
-            if  ord(tree.leftPtr.val.val[0]) <= 57 and ord(tree.leftPtr.val.val[0]) >= 48 and ord(tree.rightPtr.val.val[0]) <= 57 and ord(tree.rightPtr.val.val[0]) >= 48:
-                self.process(tree.leftPtr)
-                self.write("(")
-                self.process(tree.rightPtr)
-                self.write(")")
-            else:
 
-                if tree.leftPtr.val.type != "unary" and  tree.leftPtr.val.type != "func":
-                    self.write("(")
-                    self.process(tree.leftPtr)
-                    self.write(")")
-                else:
-                    self.process(tree.leftPtr)
-                if tree.rightPtr.val.type != "unary" and tree.rightPtr.val.type != "func":
-                    self.write("(")
-                    self.process(tree.rightPtr)
-                    self.write(")")
-                else:
-                    self.process(tree.rightPtr)
+		# Write left (and wrap in brackets if it's not a unary or func)
+		if tree.leftPtr.val.type != "unary" and  tree.leftPtr.val.type != "func":
+			self.write("(")
+			self.process(tree.leftPtr)
+			self.write(")")
+		else:
+			self.process(tree.leftPtr)
+
+		# If we just wrote a number and we're about to write another, we need to put brackets around the right.
+		insertBracketsCauseBothNumbers = False
+		if ord(finalLatex[len(finalLatex) - 1]) <= 57 and ord(finalLatex[len(finalLatex) - 1]) >= 48 and ord(tree.rightPtr.val.val[0]) <= 57 and ord(tree.rightPtr.val.val[0]) >= 48:
+			self.write("(")
+			insertBracketsCauseBothNumbers = True
+
+		# Write right (and wrap in brackets if it's not a unary or func)
+		if tree.rightPtr.val.type != "unary" and tree.rightPtr.val.type != "func":
+			self.write("(")
+			self.process(tree.rightPtr)
+			self.write(")")
+		else:
+			self.process(tree.rightPtr)
+
+		if insertBracketsCauseBothNumbers == True:
+			self.write(")")
